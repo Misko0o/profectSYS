@@ -9,6 +9,7 @@ serversocket.bind((HOST, PORT))
 serversocket.listen()
 print("server listening on port:", PORT)
 nb_open = 0
+carnet = dict()
 # Create list of potential active sockets and place server socket in
 # first positionezr 
 socketlist = [serversocket]
@@ -20,8 +21,10 @@ while first or nb_open > 0:
         if s == serversocket:
             (clientsocket, (addr, port)) = serversocket.accept()
             socketlist.append(clientsocket)
-            msg = clientsocket.recv(MAXBYTES)
-            print(f"Incoming connection from {msg} {addr} on port {port}...")
+            userName = clientsocket.recv(MAXBYTES)
+            carnet[userName] = (addr,port)
+            print(f"{carnet}")
+            print(f"Incoming connection from {userName} {addr} on port {port}...")
             nb_open += 1
         else:
             msg = s.recv(MAXBYTES)
