@@ -17,4 +17,7 @@ Le serveur affiche les messages reçus
 Le serveur ne redirige pas les messages 
 Le client est utilisé dans le terminal de base faute de mieux
 
+18hr 21/04/2024 : Louis
+J'ai resolu le problème des espace théoriquement en le remplacant avec _ mais A TESTER!
+
 
