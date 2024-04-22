@@ -17,17 +17,11 @@ def signal_handler(sig,frame):
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
-cbon=True
 UserName=""
 UserName = input("Entrez un nom d'utilisateur :")
+UserName = UserName.replace(' ', '_')
+print("Nom d'utilisateur traité :", UserName)
 
-# while cbon:
-#     UserName = input("Entrez un nom d'utilisateur :")
-#     for i in UserName:
-#         if i==" ":
-#             break
-#         else:
-#             cbon = False
             
 TUBE = "/var/tmp/"+UserName+".fifo"
 LOG  = "/var/tmp/"+UserName+".log"
