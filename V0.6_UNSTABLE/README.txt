@@ -20,7 +20,4 @@ Le client est utilisé dans le terminal de base faute de mieux
 18hr 21/04/2024 : Louis
 J'ai resolu le problème des espace théoriquement en le remplacant avec _ mais A TESTER!
 
-02:07 28/04/2024 : Mathis
-Je confirme la résolution du bug des espace
-Le serveur reçoit correctement tout les message ET les renvoies 
-le ping (@user) fait crash l'User et uniquement lui les autres reçoivent un message vide
+
