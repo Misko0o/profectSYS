@@ -10,6 +10,7 @@ serversocket.listen()
 print("server listening on port:", PORT)
 nb_open = 0
 carnet = dict()
+carnat = dict()
 # Create list of potential active sockets and place server socket in
 # first positionezr 
 socketlist = [serversocket]
@@ -48,7 +49,7 @@ def broadcast_message(message, sender_socket):
     # Parcours de toutes les sockets dans socketlist
     for client_socket in socketlist:
         # Vérifie si la socket est différente de la socket du serveur et du socket envoyant le message
-        if client_socket != serversocket and client_socket != sender_socket:
+        if client_socket != serversocket:
             try:
                 # Envoi du message à la socket du client
                 client_socket.sendall(message)
@@ -67,6 +68,7 @@ while first or nb_open > 0:
             socketlist.append(clientsocket)
             UserName = clientsocket.recv(MAXBYTES).decode()
             carnet[port] = (UserName,addr)
+            carnat[UserName]  = (port,addr)
             # print(f"{carnet}")
             print(f"Incoming connection from {UserName} {addr} on port {port}...")
             nb_open += 1
