@@ -23,34 +23,12 @@ atexit.register(clafin)
 def signal_handler(sig,frame):
     print("\nDéconexion...")
     clafin()
-    sys.exit(0)
+    sys.exit(0) 
 
 signal.signal(signal.SIGINT, signal_handler)
 
-def send_to_user(message, recipient_username):
-    os.write(1, message)
-    # Assurez-vous que le message est en bytes
-    if isinstance(message, str):
-        message = message.encode()
-
-    # Check if the message starts with b"@"
-    if message.lstrip().startswith(b"@"):
-    # Décodez le message bytes en string
-        msg_str = message.decode().strip()
-        # Extrait le nom d'utilisateur de la partie "@user"
-        recipient = msg_str.split(" ")[0]
-        # Vérifie si le nom d'utilisateur correspond à celui recherché
-        if recipient == "@" + recipient_username:
-            # Envoie le message uniquement à cet utilisateur
-            for port, (username, addr) in carnet.items():
-                if username == recipient_username:
-                    try:
-                        client_socket = next(socket for socket in socketlist if socket.getpeername()[1] == port)
-                        client_socket.sendall(message)
-                    except StopIteration:
-                        print(f"Utilisateur {recipient_username} n'est pas connecté.")
-                    except Exception as e:
-                        print(f"Erreur lors de l'envoi du message à {recipient_username} :", e)
+def send_to_user(message,sender_socket,recivier):
+    pass
 
 def broadcast_message(message, sender_socket):
     # Parcours de toutes les sockets dans socketlist
@@ -95,7 +73,8 @@ while first or nb_open > 0:
                     # Extract the username from the part "@user"
                     recipient_username = msg_str.split(" ")[0][1:]
                     # Send the message only to this user
-                    send_to_user(msg_mine, recipient_username)
+                    send_to_user(msg_mine, recipient_username,None)
+                    broadcast_message(msg_mine, s)
                 else:
                 # Envoie le message a tout les clients
                     broadcast_message(msg_mine, s)
