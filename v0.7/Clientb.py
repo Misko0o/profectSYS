@@ -50,21 +50,15 @@ clientsocket.connect((HOST, PORT))
 clientsocket.sendall(UserName.encode())
 
 while True:
-    # Attendre que l'utilisateur entre une commande à envoyer au serveur
-    readable, _, _ = select.select([Writer, clientsocket], [], [])
-    for r in readable:
-        if r == Writer:
-            # Lecture de l'entrée utilisateur depuis le tube
+    readable, _, _ = select.select([Writer, clientsocket], [], [])#ici on enregistre tout les fichier en lecture entre Writer et clientsocket que l'on mets dans readable  
+    for r in readable:#ici on vas trier et traiter nos fichier 
+        if r == Writer:#on l'envoie le msg si r=Writer (soit l'entrée utilisateur)
             msg = os.read(Writer, 4096).decode()
-            # Envoi du message au serveur
             clientsocket.sendall(msg.encode())
-        elif r == clientsocket:
-            # Réception des messages du serveur
+        elif r == clientsocket: #on vas ecrire dans le fichier log les reponses serveurs 
             response = clientsocket.recv(4096)
-            # Écriture de la réponse dans le fichier de log
+
             os.write(Reader, response)
             print("Réponse du serveur:", response.decode())
-
-    # Vérifier si l'utilisateur veut quitter
-# Fermer la connexion
+   #Le select nous permet de lire et envoyer en simultané les informations ce qui permet une comunication sans alternance.    
 clientsocket.close()
