@@ -27,3 +27,7 @@ le ping (@user) fait crash l'User et uniquement lui les autres reçoivent un mes
 
 15:09 30/04/2024: Mathis
 Le ping fonctionne
+
+
+16:00 01/05/2024: Louis
+J'ai reussi a garder le terminal intacte cependant problème de deconexion vu que le Cntl C ne marche pas  
