@@ -28,7 +28,6 @@ atexit.register(clafin)
 
 def signal_handler(sig,frame):
     print("\nDéconexion...")
-    clafin()
     sys.exit(0) 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -69,8 +68,9 @@ while first or nb_open > 0:
         elif s == Writer :
             msg = os.read(Writer, 4096).decode()
             if msg != '':
-                print(msg,end='')
-                broadcast_message(msg.encode())
+                msg = msg.encode()
+                os.write(1,msg)
+                broadcast_message(msg)
         else:
             msg = s.recv(MAXBYTES)
             if len(msg) == 0:
