@@ -38,7 +38,8 @@ def send_to_user(message,sender_socket,recivier):
             name = carnet[s.getpeername()[1]][0]
             if name in recivier:
                 s.sendall(message)
-    sender_socket.sendall(message)
+    if sender_socket != None :
+        sender_socket.sendall(message)
 
 def broadcast_message(message):
     # Parcours de toutes les sockets dans socketlist
@@ -59,7 +60,7 @@ def send_commande(destinaire,commande):
         if s != serversocket and s != Writer:
             name = carnet[s.getpeername()[1]][0]
             if name in destinaire:
-                s.sendall(commande)
+                s.sendall(commande.encode())
 
 while first or nb_open > 0:
     (activesockets, _, _) = select.select(socketlist, [], [])
@@ -78,16 +79,17 @@ while first or nb_open > 0:
             if msg.startswith(b"@"):
                 recipient = msg.decode().split(" ")
                 destinataires = []
-                placeholder = False
+                placeholder = True
                 for e in recipient :
                         if e[0] == '@' :
                             destinataires.append(e[1:])
                         elif e[0] == '!': 
                             commande = e
                             send_commande(destinataires,commande)
-                if not placeholder:
-                    send_to_user(msg.encode(), None,destinataires)
-            if msg != '':
+                            placeholder = False
+                if placeholder:
+                    send_to_user(msg, None,destinataires)
+            elif msg != '':
                 msg = msg
                 os.write(1,msg)
                 broadcast_message(msg)
