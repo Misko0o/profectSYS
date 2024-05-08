@@ -9,6 +9,7 @@ serversocket.bind((HOST, PORT))
 serversocket.listen()
 print("server listening on port:", PORT)
 nb_open = 0
+etat="Vivant"
 carnet = dict()
 # Create list of potential active sockets and place server socket in
 # first positionezr
@@ -23,12 +24,12 @@ socketlist = [serversocket,Writer]
 first = True
 
 def clafin():
+    os.remove(TUBE)
     print("Last connection closed. Bye!")
 atexit.register(clafin)
 
 def signal_handler(sig,frame):
     print("\nDéconexion...")
-    
     sys.exit(0) 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -73,7 +74,7 @@ while first or nb_open > 0:
             (clientsocket, (addr, port)) = serversocket.accept()
             socketlist.append(clientsocket)
             UserName = clientsocket.recv(MAXBYTES).decode()
-            carnet[port] = (UserName,addr)
+            carnet[port] = (UserName,addr,etat)
             # print(f"{carnet}")
             print(f"Incoming connection from {UserName} {addr} on port {port}...")
             update_carnet(carnet)
@@ -91,7 +92,6 @@ while first or nb_open > 0:
                         elif e[0] == '!': 
                             commande = e
                             send_commande(destinataires,commande)
-                            update_carnet(carnet)
                             placeholder = False
                 if placeholder:
                     send_to_user(msg, None,destinataires)
@@ -102,11 +102,10 @@ while first or nb_open > 0:
         else:
             msg = s.recv(MAXBYTES)
             if len(msg) == 0:
-                print(f"NULL message. Closing connection for {carnet[s.getpeername()[1]][0]} {s.getpeername()}") 
+                print(f"NULL message. Closing connection for {carnet[s.getpeername()[1]][0]} {s.getpeername()}")
                 s.close()            
                 socketlist.remove(s)
                 nb_open -= 1
-                update_carnet(carnet)
             else:
                 source_info = f"[{carnet[s.getpeername()[1]][0]}] : {msg.decode()}"
                 msg_mine = source_info.encode()
@@ -120,12 +119,9 @@ while first or nb_open > 0:
                     for e in recipient_username :
                         if e[0] == '@' :
                             destinataires.append(e[1:])
-
                     # Send the message only to this user
                     send_to_user(msg_mine, s,destinataires)
                 else:
                 # Envoie le message a tout les clients
                     broadcast_message(msg_mine)
-os.remove(TUBE)
-os.kill(pid_saisie, signal.SIGINT)
 sys.exit(0)
