@@ -9,7 +9,7 @@ serversocket.bind((HOST, PORT))
 serversocket.listen()
 print("server listening on port:", PORT)
 nb_open = 0
-etat="Vivant"
+etat="Vivant"#ici
 carnet = dict()
 # Create list of potential active sockets and place server socket in
 # first positionezr
@@ -74,7 +74,7 @@ while first or nb_open > 0:
             (clientsocket, (addr, port)) = serversocket.accept()
             socketlist.append(clientsocket)
             UserName = clientsocket.recv(MAXBYTES).decode()
-            carnet[port] = (UserName,addr,etat)
+            carnet[port] = (UserName,addr,etat)#ici
             # print(f"{carnet}")
             print(f"Incoming connection from {UserName} {addr} on port {port}...")
             update_carnet(carnet)
