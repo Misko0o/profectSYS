@@ -41,6 +41,10 @@ def send_to_user(message,sender_socket,recivier):
     if sender_socket != None :
         sender_socket.sendall(message)
 
+def update_carnet(carnet):
+    message = f"#CARNET#{str(carnet)}".encode()
+    broadcast_message(message)
+
 def broadcast_message(message):
     # Parcours de toutes les sockets dans socketlist
     for client_socket in socketlist:
@@ -72,6 +76,7 @@ while first or nb_open > 0:
             carnet[port] = (UserName,addr)
             # print(f"{carnet}")
             print(f"Incoming connection from {UserName} {addr} on port {port}...")
+            update_carnet(carnet)
             first = False
             nb_open += 1
         elif s == Writer :
