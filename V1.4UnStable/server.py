@@ -86,15 +86,15 @@ while first or nb_open > 0:
             if msg.startswith(b"@"):
                 recipient = msg.decode().split(" ")
                 destinataires = []
-                placeholder = True
+                iscommande = False
                 for e in recipient :
                         if e[0] == '@' :
                             destinataires.append(e[1:])
                         elif e[0] == '!': 
                             commande = e
                             send_commande(destinataires,commande)
-                            placeholder = False
-                if placeholder:
+                            iscommande = True
+                if not iscommande:
                     send_to_user(msg, None,destinataires)
             elif msg != '':
                 msg = msg
@@ -104,7 +104,7 @@ while first or nb_open > 0:
             msg = s.recv(MAXBYTES)
             if len(msg) == 0:
                 print(f"NULL message. Closing connection for {carnet[s.getpeername()[1]][0]} {s.getpeername()}")
-                Detecteur=f"#Mort+{carnet[s.getpeername()[1]][0]} {s.getpeername()}"
+                Detecteur=f"#Mort#{carnet[s.getpeername()[1]][0]}#{s.getpeername()[1]}#{s.getpeername()[2]}#"
                 A=Detecteur.encode()
                 broadcast_message(A)
                 s.close()            
