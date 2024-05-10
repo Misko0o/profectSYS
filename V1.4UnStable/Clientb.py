@@ -94,7 +94,7 @@ def update_carnet(carnet_str):
 def affiche_carnet(carnet_str):
     global carnet
     carnet = eval(carnet_str)
-    for port, (username, addr, etat) in carnet.items():
+    for port, (username, addr,port, etat) in carnet.items():
         if (username==UserName):
             moi = "-moi(" + etat + ")\n"
             moi2 = moi.encode()

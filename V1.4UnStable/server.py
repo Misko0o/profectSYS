@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import os, sys, socket, select,signal,atexit,time
+import os, sys, socket, select,signal,atexit,time,random
 HOST = "127.0.0.1"  # or 'localhost' or '' - Standard loopback interface address
 PORT = int(sys.argv[1])  # Port to listen on (non-privileged ports are > 1023)
 MAXBYTES = 4096
@@ -34,14 +34,12 @@ def signal_handler(sig,frame):
     sys.exit(0) 
 signal.signal(signal.SIGINT, signal_handler)
 
-def send_to_user(message,sender_socket,recivier):
+def send_to_user(message,recivier):
     for s in socketlist:
         if s != serversocket and s != Writer:
             name = carnet[s.getpeername()[1]][0]
             if name in recivier:
                 s.sendall(message)
-    if sender_socket != None :
-        sender_socket.sendall(message)
 
 def update_carnet(carnet):
     message = f"#CARNET#{str(carnet)}".encode()
@@ -67,20 +65,24 @@ def send_commande(destinaire,commande):
             name = carnet[s.getpeername()[1]][0]
             if name in destinaire:
                 s.sendall(commande.encode())
-
+lancé = False
 while first or nb_open > 0:
     (activesockets, _, _) = select.select(socketlist, [], [])
     for s in activesockets:
         if s == serversocket:
-            (clientsocket, (addr, port)) = serversocket.accept()
-            socketlist.append(clientsocket)
-            UserName = clientsocket.recv(MAXBYTES).decode()
-            carnet[port] = (UserName,addr,etat)
-            # print(f"{carnet}")
-            print(f"Incoming connection from {UserName} {addr} on port {port}...")
-            update_carnet(carnet)
-            first = False
-            nb_open += 1
+            if not lancé :
+                (clientsocket, (addr, port)) = serversocket.accept()
+                socketlist.append(clientsocket)
+                UserName = clientsocket.recv(MAXBYTES).decode()
+                cookie = random.randint(100000,999999)
+                carnet[port] = (UserName,addr,etat,cookie)
+                # print(f"{carnet}")
+                send_to_user(cookie,[clientsocket])
+                cookie_volatil = f"#CARNET#{UserName}#{addr}#{port}#{etat}#"
+                print(f"Incoming connection from {UserName} {addr} on port {port}... id {cookie}")
+                broadcast_message(cookie_volatil)
+                first = False
+                nb_open += 1
         elif s == Writer :
             msg = os.read(Writer, 4096)
             if msg.startswith(b"@"):
@@ -104,7 +106,7 @@ while first or nb_open > 0:
             msg = s.recv(MAXBYTES)
             if len(msg) == 0:
                 print(f"NULL message. Closing connection for {carnet[s.getpeername()[1]][0]} {s.getpeername()}")
-                Detecteur=f"#Mort#{carnet[s.getpeername()[1]][0]}#{s.getpeername()[1]}#{s.getpeername()[2]}#"
+                Detecteur=f"#Mort#{carnet[s.getpeername()[1]][0]}#{s.getpeername()[1]}#{s.getpeername()[2]}#{carnet[s.getpeername()[1]][2]}#"
                 A=Detecteur.encode()
                 broadcast_message(A)
                 s.close()            
@@ -119,12 +121,12 @@ while first or nb_open > 0:
                     msg_str = msg.decode()
                     # Extract the username from the part "@user"
                     recipient_username = msg_str.split(" ")
-                    destinataires = []
-                    for e in recipient_username :
+                    destinataires = [s]
+                    for e in recipient_username:
                         if e[0] == '@' :
                             destinataires.append(e[1:])
                     # Send the message only to this user
-                    send_to_user(msg_mine, s,destinataires)
+                    send_to_user(msg_mine,destinataires)
                 else:
                 # Envoie le message a tout les clients
                     broadcast_message(msg_mine)
