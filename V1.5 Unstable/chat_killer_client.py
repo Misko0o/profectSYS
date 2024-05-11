@@ -123,7 +123,7 @@ if pid_child == 0:
                         clientsocket.sendall(msg.encode())
             elif r == clientsocket:
                 response = clientsocket.recv(4096)
-                if response.strip(b"#CARNET"):
+                if response.startswith(b"#CARNET"):
                     update_carnet(response[8:].decode())
                 elif response.startswith(b"!ban"):
                     os.kill(os.getpid(), signal.SIGINT)
