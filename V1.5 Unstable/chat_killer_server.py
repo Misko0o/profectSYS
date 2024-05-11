@@ -76,10 +76,11 @@ while first or nb_open > 0:
                 print(f"{carnet}")
                 # send_to_user(cookie.encode(),[UserName])
                 for page in carnet:
-                    a = f"CARNoT#{carnet[page][0]}#{carnet[page][2]}"
+                    a = f"#CARNET#{carnet[page][0]}#{carnet[page][2]} "
                     print(a)
                     clientsocket.sendall(a.encode())
-                cookie_volatil = f"CARNET#{UserName}#{etat}"
+                    time.sleep(0.1)
+                cookie_volatil = f"#CARNET#{UserName}#{etat}"
                 print(f"Incoming connection from {UserName} {addr} on port {port}... id {cookie}")
                 cokie_encodé=cookie_volatil.encode()
                 broadcast_message(cokie_encodé)
@@ -110,15 +111,17 @@ while first or nb_open > 0:
             msg = s.recv(MAXBYTES)
             if len(msg) == 0:
                 print("NULL message. Closing connection for", carnet[s.getpeername()[1]][0], s.getpeername())
-                Detecteur = f"#CARNET#{carnet[s.getpeername()[1]][0]}#Mort"
-                A = Detecteur.encode()
-                broadcast_message(A)
+                port = s.getpeername()[1]  # Obtenez le numéro de port à partir de la socket
+                condamné = carnet[port]  # Utilisez le numéro de port pour accéder à l'entrée dans carnet
+                a = f"#CARNET#{condamné[0]}#Mort".encode()  # Utilisez le nom d'utilisateur de l'entrée carnet
+                broadcast_message(a)
                 s.close()
                 socketlist.remove(s)
+                del carnet[port]  # Supprimez l'entrée du dictionnaire carnet
                 nb_open -= 1
             else:
                 source_info = f"[{carnet[s.getpeername()[1]][0]}] : {msg.decode()}"
-                msg_mine = source_info.encode()
+                msg_mine = source_info.encode() 
                 os.write(1, msg_mine)
                 if msg.startswith(b"@Admin"):
                     pass
