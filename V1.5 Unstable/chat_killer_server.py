@@ -74,11 +74,12 @@ while first or nb_open > 0:
                 cookie = random.randint(100000,999999)
                 carnet[port] = (UserName,addr,etat,cookie)
                 print(f"{carnet}")
-                send_to_user(cookie,[clientsocket])
+                # send_to_user(cookie.encode(),[UserName])
                 for page in carnet:
-                    a = f"#CARNET#{carnet[page][0]}#{carnet[page][2]}"
-                    send_to_user(a, [clientsocket])
-                cookie_volatil = f"#CARNET#{UserName}#{etat}"
+                    a = f"CARNoT#{carnet[page][0]}#{carnet[page][2]}"
+                    print(a)
+                    clientsocket.sendall(a.encode())
+                cookie_volatil = f"CARNET#{UserName}#{etat}"
                 print(f"Incoming connection from {UserName} {addr} on port {port}... id {cookie}")
                 cokie_encodé=cookie_volatil.encode()
                 broadcast_message(cokie_encodé)
@@ -98,7 +99,7 @@ while first or nb_open > 0:
                             send_commande(destinataires,commande)
                             iscommande = True
                 if not iscommande:
-                    send_to_user(msg, None,destinataires)
+                    send_to_user(msg,destinataires)
                     print(f"*Comande invalide*\n")
 
             elif msg != '':
@@ -119,7 +120,9 @@ while first or nb_open > 0:
                 source_info = f"[{carnet[s.getpeername()[1]][0]}] : {msg.decode()}"
                 msg_mine = source_info.encode()
                 os.write(1, msg_mine)
-                if msg.startswith(b"@"):
+                if msg.startswith(b"@Admin"):
+                    pass
+                elif msg.startswith(b"@"):
                     msg_str = msg.decode()
                     recipient_username = msg_str.split(" ")
                     destinataires = [s]
