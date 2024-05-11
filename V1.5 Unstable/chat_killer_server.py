@@ -72,7 +72,7 @@ while first or nb_open > 0:
                 socketlist.append(clientsocket)
                 UserName = clientsocket.recv(MAXBYTES).decode()
                 cookie = random.randint(100000,999999)
-                carnet[port] = (UserName,addr,etat,cookie)
+                carnet[port] = (UserName,addr,etat,cookie,clientsocket,None)
                 print(f"{carnet}")
                 # send_to_user(cookie.encode(),[UserName])
                 for page in carnet:
@@ -88,7 +88,19 @@ while first or nb_open > 0:
                 nb_open += 1
         elif s == Writer :
             msg = os.read(Writer, 4096)
-            if msg.startswith(b"@"):
+            if msg.startswith(b'!start'): #On Cook severe ici
+                lancé = True
+                mots_courants = ["maison","chat","voiture","chien","ordinateur","table","téléphone","arbre","café","livre","fenêtre","porte","avion","banane","musique","soleil","pluie","sac","télévision","crayon"]
+
+                for (indec,page) in carnet.items() :
+                    _,_,_,cookie,clientsocket,mot = page #c caca
+                    lancement = f"!start {cookie}".encode()
+                    os.write(1,lancement)
+                    clientsocket.send(lancement)
+                broadcast_message("La partie est lancé vous allez recevoir vos cible".encode())
+                for i in range(len(carnet)):
+                    pass  #daniel
+            elif msg.startswith(b"@"):
                 recipient = msg.decode().split(" ")
                 destinataires = []
                 iscommande = False
@@ -103,7 +115,7 @@ while first or nb_open > 0:
                     send_to_user(msg,destinataires)
                     print(f"*Comande invalide*\n")
 
-            elif msg != '':
+            elif msg != '' and msg != "\n":
                 msg = msg
                 os.write(1,msg)
                 broadcast_message(msg)
