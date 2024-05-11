@@ -88,16 +88,15 @@ os.waitpid(pid_LOGcreat,0)
 
 def update_carnet(carnet_str):
     global Mon_etat
+    print(carnet_str)
     valeurs = carnet_str.split('#') 
     UserName=valeurs[0]
     etat = valeurs[1]
-
     carnet[UserName]=etat
-a=0
+    
 def affiche_carnet(carnet_str):
-    global a
     for username,etat in carnet.items():
-        Utilisateurs=f"-{username}=>╗{etat}╝)\n"
+        Utilisateurs=f"-{username}=>(╗{etat}╝)\n"
         Util=Utilisateurs.encode()
         os.write(Reader,Util)
 
@@ -124,7 +123,7 @@ if pid_child == 0:
                         clientsocket.sendall(msg.encode())
             elif r == clientsocket:
                 response = clientsocket.recv(4096)
-                if response.startswith(b"#CARNET#"):
+                if response.strip(b"#CARNET"):
                     update_carnet(response[8:].decode())
                 elif response.startswith(b"!ban"):
                     os.kill(os.getpid(), signal.SIGINT)
