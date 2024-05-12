@@ -71,9 +71,9 @@ while first or nb_open > 0:
                 (clientsocket, (addr, port)) = serversocket.accept()
                 socketlist.append(clientsocket)
                 UserName = clientsocket.recv(MAXBYTES).decode()
-                _ = clientsocket.recv(MAXBYTES).decode() #ignore la deuxieme entrée
+                # _ = clientsocket.recv(MAXBYTES).decode() #ignore la deuxieme entrée
                 cookie = random.randint(100000,999999)
-                carnet[port] = (UserName,addr,etat,cookie,clientsocket,"")
+                carnet[port] = (UserName,addr,etat,str(cookie),clientsocket,"")
                 print(f"{carnet}")
                 # send_to_user(cookie.encode(),[UserName])
                 for page in carnet:
@@ -92,7 +92,7 @@ while first or nb_open > 0:
 
                 UserName = clientsocket.recv(MAXBYTES).decode()
                 CookieRecu = clientsocket.recv(MAXBYTES).decode() #ignore la deuxieme entrée
-                for (index,page) in carnet :
+                for (index,page) in carnet.items() :
                     (User,oldaddr,etat,cookie,oldsocket,mot) = page
                     if User == UserName:
                         if CookieRecu != cookie:

@@ -120,9 +120,11 @@ def signal_handler(sig, frame):
     os._exit(0)
 
 clientsocket.sendall(UserName.encode())
+clientsocket.send(b"")
 var=os.read(tmp,4096)
 if var.startswith(b"!C="):
         clientsocket.sendall(var[3:9])
+        print('supercalifragilistisexpilialidocius')
         os.write(1,var[3:9])
 os.waitpid(pid_LOGcreat,0)
 
