@@ -70,33 +70,37 @@ Reader=os.open(LOG,os.O_WRONLY)
 tmp=create_cookie_file(COOKIE)
 
 clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+os.write(Reader,"\n \n \n".encode())
+
+Conexion_etablie=False
 try:
     clientsocket.connect((HOST, PORT))
 except ConnectionRefusedError:  # Utilisez ConnectionRefusedError au lieu de "Connection refused"
-    # os.write(Reader,"Server injoignable voulez vous reesayer?\n <Repondez Oui pour recontacter le serveur, ou Non pour quiter.".encode())
-    # Courage=os.read(Writer, 4096)
-    # if Courage.startswith(b"Oui"):
-    #     print("Tentative de Reconnexion")
-    #     while not Courage.startswith(b"Non"):
-    #         try:
-    #             clientsocket.connect((HOST, PORT))
-    #         except ConnectionRefusedError:
-    #             os.write(Reader,"Server injoignable voulez vous reesayer?\n <Repondez Oui pour recontacter le serveur, ou Non pour quiter.>".encode())
-    #         time.sleep(10)
-    # if Courage.startswith(b"Non"):
-    #     print("\n Déconnexion...")
-    #     os.remove(TUBE)
-    #     os.remove(LOG)
-    #     try:
-    #         os.kill(pid_affichage, signal.SIGTERM)
-    #         os.waitpid(pid_affichage, 0)
-    #     except ChildProcessError:
-    #         pass
-    #     try:
-    #         os.kill(pid_saisie, signal.SIGTERM)
-    #         os.waitpid(pid_saisie, 0)
-    #     except ChildProcessError:
-            pass
+    os.write(Reader,"   Server injoignable voulez vous reesayer?\n      --<!connect pour reesayer>--\n".encode())
+    while not Conexion_etablie:
+        Courage=os.read(Writer, 4096)
+        if Courage.strip(b"!connect"):
+            os.write(Reader,"Tentative de connexion>".encode())
+            try:
+                clientsocket.connect((HOST, PORT))
+                Conexion_etablie=True   
+            except ConnectionRefusedError:
+                pass
+        elif Courage.strip(b"!!Exit"):
+            print("\n Déconnexion...")
+            os.remove(TUBE)
+            os.remove(LOG)
+            try:
+                os.kill(pid_affichage, signal.SIGTERM)
+                os.waitpid(pid_affichage, 0)
+            except ChildProcessError:
+                pass
+            try:
+                os.kill(pid_saisie, signal.SIGTERM)
+                os.waitpid(pid_saisie, 0)
+            except ChildProcessError:
+                pass
+            os._exit(0)
 
 
 def signal_handler(sig, frame):
@@ -118,14 +122,13 @@ def signal_handler(sig, frame):
         pass
 
     os._exit(0)
-
 clientsocket.sendall(UserName.encode())
 clientsocket.send(b"")
 var=os.read(tmp,4096)
 if var.startswith(b"!C="):
         clientsocket.sendall(var[3:9])
-        print('supercalifragilistisexpilialidocius')
         os.write(1,var[3:9])
+
 os.waitpid(pid_LOGcreat,0)
 
 def update_carnet(carnet_str):
