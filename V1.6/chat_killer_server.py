@@ -71,8 +71,9 @@ while first or nb_open > 0:
                 (clientsocket, (addr, port)) = serversocket.accept()
                 socketlist.append(clientsocket)
                 UserName = clientsocket.recv(MAXBYTES).decode()
+                _ = clientsocket.recv(MAXBYTES).decode() #ignore la deuxieme entrée
                 cookie = random.randint(100000,999999)
-                carnet[port] = (UserName,addr,etat,cookie,clientsocket,None)
+                carnet[port] = (UserName,addr,etat,cookie,clientsocket,"")
                 print(f"{carnet}")
                 # send_to_user(cookie.encode(),[UserName])
                 for page in carnet:
@@ -86,18 +87,43 @@ while first or nb_open > 0:
                 broadcast_message(cokie_encodé)
                 first = False   
                 nb_open += 1
+            else:
+                (clientsocket, (addr, port)) = serversocket.accept()
+
+                UserName = clientsocket.recv(MAXBYTES).decode()
+                CookieRecu = clientsocket.recv(MAXBYTES).decode() #ignore la deuxieme entrée
+                for (index,page) in carnet :
+                    (User,oldaddr,etat,cookie,oldsocket,mot) = page
+                    if User == UserName:
+                        if CookieRecu != cookie:
+                            clientsocket.send("La partie a commencé".encode())
+                            clientsocket.close()
+                        else :
+                            del carnet[index]
+                            carnet[port] = (UserName,addr,etat,cookie,clientsocket,mot)
+                            socketlist.append(clientsocket)
+                        break
+                
+                print(f"{carnet}")
         elif s == Writer :
             msg = os.read(Writer, 4096)
-            if msg.startswith(b'!start'): #On Cook severe ici
+            if msg.startswith(b'!start') and not lancé: #On Cook severe ici
                 lancé = True
+                print("cacaca")
                 mots_courants = ["maison","chat","voiture","chien","ordinateur","table","téléphone","arbre","café","livre","fenêtre","porte","avion","banane","musique","soleil","pluie","sac","télévision","crayon"]
-
-                for (indec,page) in carnet.items() :
-                    _,_,_,cookie,clientsocket,mot = page #c caca
+                liste = list(range(0,len(carnet)))
+                random.shuffle(liste)
+                ordre = list(range(0,len(carnet)))
+                i=0
+                for (index,page) in carnet.items() :
+                    UserName,_,_,cookie,clientsocket,mot = page #c caca
+                    ordre[liste[i]] = index
+                    i=i+1
                     lancement = f"!start {cookie}".encode()
                     os.write(1,lancement)
                     clientsocket.send(lancement)
                 broadcast_message("La partie est lancé vous allez recevoir vos cible".encode())
+                os.write(1,str(ordre).encode())
                 for i in range(len(carnet)):
                     pass  #daniel
             elif msg.startswith(b"@"):
