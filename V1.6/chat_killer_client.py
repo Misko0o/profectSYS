@@ -17,8 +17,37 @@ MyUserName = UserName.replace(' ', '_')
 print("Nom d'utilisateur traité :", UserName)
 etat="Vivant"
 carnet = {}
+# def create_user_directory(username):
+#     user_directory = "/" + username
+#     if not os.path.exists(user_directory):
+#         try:
+#             os.makedirs(user_directory)
+#             print(f"Répertoire utilisateur créé avec succès : {user_directory}")
+#         except Exception as e:
+#             print(f"Erreur lors de la création du répertoire utilisateur : {e}")
+#     return user_directory
+
+# TUBE = "/~"+create_user_directory(UserName) + "/" + UserName + ".fifo"
+# LOG = "/~"+create_user_directory(UserName) + "/" + UserName + ".log"
+# COOKIE = "/~"+create_user_directory(UserName) + "/" + UserName + ".tmp"
+def create_cookie_file(cookie_path):
+    try:
+        if not os.path.exists(cookie_path):
+            with open(cookie_path, 'w+'):
+                print(f"Fichier cookie créé avec succès : {cookie_path}")
+                return os.open(cookie_path,os.O_RDWR)
+        else:
+            print(f"Le fichier cookie existe déjà : {cookie_path}")
+            return os.open(cookie_path,os.O_RDWR)
+    except Exception as e:
+        print(f"Erreur lors de la création du fichier cookie : {e}")
+    
+
 TUBE = "/var/tmp/"+UserName+".fifo"
 LOG  = "/var/tmp/"+UserName+".log"
+COOKIE="/var/tmp/"+UserName+"temp"+".txt"
+
+
 Write=True
 pid_LOGcreat = os.fork()
 if pid_LOGcreat == 0 :
@@ -38,30 +67,37 @@ print("Terminal de saisie ouvert sur : {}\nTerminal de lecture ouvert sur : {}\n
 time.sleep(1)
 Writer=os.open(TUBE,os.O_RDONLY)
 Reader=os.open(LOG,os.O_WRONLY)
+tmp=create_cookie_file(COOKIE)
 
 clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 try:
     clientsocket.connect((HOST, PORT))
 except ConnectionRefusedError:  # Utilisez ConnectionRefusedError au lieu de "Connection refused"
-    print("Serveur Non atteignable")
-    # Supprimer les fichiers TUBE et LOG
-    if os.path.exists(TUBE):
-        os.remove(TUBE)
-    if os.path.exists(LOG):
-        os.remove(LOG)
-    try:
-        os.kill(pid_affichage, signal.SIGTERM)
-        os.waitpid(pid_affichage, 0)
-    except ChildProcessError:
-        pass
+    # os.write(Reader,"Server injoignable voulez vous reesayer?\n <Repondez Oui pour recontacter le serveur, ou Non pour quiter.".encode())
+    # Courage=os.read(Writer, 4096)
+    # if Courage.startswith(b"Oui"):
+    #     print("Tentative de Reconnexion")
+    #     while not Courage.startswith(b"Non"):
+    #         try:
+    #             clientsocket.connect((HOST, PORT))
+    #         except ConnectionRefusedError:
+    #             os.write(Reader,"Server injoignable voulez vous reesayer?\n <Repondez Oui pour recontacter le serveur, ou Non pour quiter.>".encode())
+    #         time.sleep(10)
+    # if Courage.startswith(b"Non"):
+    #     print("\n Déconnexion...")
+    #     os.remove(TUBE)
+    #     os.remove(LOG)
+    #     try:
+    #         os.kill(pid_affichage, signal.SIGTERM)
+    #         os.waitpid(pid_affichage, 0)
+    #     except ChildProcessError:
+    #         pass
+    #     try:
+    #         os.kill(pid_saisie, signal.SIGTERM)
+    #         os.waitpid(pid_saisie, 0)
+    #     except ChildProcessError:
+            pass
 
-    try:
-        os.kill(pid_saisie, signal.SIGTERM)
-        os.waitpid(pid_saisie, 0)
-    except ChildProcessError:
-        pass
-    
-    sys.exit(0) 
 
 def signal_handler(sig, frame):
     print("\n Déconnexion...")
@@ -84,6 +120,10 @@ def signal_handler(sig, frame):
     os._exit(0)
 
 clientsocket.sendall(UserName.encode())
+var=os.read(tmp,4096)
+if var.startswith(b"!C="):
+        clientsocket.sendall(var[3:9])
+        os.write(1,var[3:9])
 os.waitpid(pid_LOGcreat,0)
 
 def update_carnet(carnet_str):
@@ -103,7 +143,6 @@ def affiche_carnet(carnet_str):
 pid_child = os.fork()
 signal.signal(signal.SIGINT, signal_handler)
 if pid_child == 0:
-    print(os.getpid())
     # Code exécuté dans le processus enfant
 
     while True:
@@ -133,6 +172,11 @@ if pid_child == 0:
                     Write=False
                 elif response.startswith(b"!forgive"):
                     Write=True
+                elif response.startswith(b"!start"):
+                    coockie="!C=".encode()
+                    coockie+=response[7:13]
+                    os.write(1,coockie)
+                    os.write(tmp,coockie)
                 else:
                     os.write(Reader, response)
         
