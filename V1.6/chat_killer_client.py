@@ -76,17 +76,10 @@ Conexion_etablie=False
 try:
     clientsocket.connect((HOST, PORT))
 except ConnectionRefusedError:  # Utilisez ConnectionRefusedError au lieu de "Connection refused"
-    os.write(Reader,"   Server injoignable voulez vous reesayer?\n      --<!connect pour reesayer>--\n".encode())
+    os.write(Reader,"   Server injoignable voulez vous reesayer?\n      --<!connect pour reesayer>--\n         -<!!Exit pou quiter>-\n".encode())
     while not Conexion_etablie:
         Courage=os.read(Writer, 4096)
-        if Courage.strip(b"!connect"):
-            os.write(Reader,"Tentative de connexion>".encode())
-            try:
-                clientsocket.connect((HOST, PORT))
-                Conexion_etablie=True   
-            except ConnectionRefusedError:
-                pass
-        elif Courage.strip(b"!!Exit"):
+        if Courage.startswith(b"!!Exit"):
             print("\n Déconnexion...")
             os.remove(TUBE)
             os.remove(LOG)
@@ -101,6 +94,14 @@ except ConnectionRefusedError:  # Utilisez ConnectionRefusedError au lieu de "Co
             except ChildProcessError:
                 pass
             os._exit(0)
+        elif Courage.startswith(b"!connect"):
+            os.write(Reader,"Tentative de connexion>".encode())
+            try:
+                clientsocket.connect((HOST, PORT))
+                Conexion_etablie=True   
+            except ConnectionRefusedError:
+                pass
+
 
 
 def signal_handler(sig, frame):
