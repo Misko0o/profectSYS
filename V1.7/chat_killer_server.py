@@ -9,8 +9,8 @@ serversocket.bind((HOST, PORT))
 serversocket.listen()
 print("server listening on port:", PORT)
 nb_open = 0
-Detecteur=""
-etat="Vivant"
+Detecteur="" #déclaration de variable pour éviter d'éventuel bugs
+etat="Vivant" 
 carnet = dict()
 # Create list of potential active sockets and place server socket in
 # first positionezr
@@ -24,7 +24,7 @@ Writer=os.open(TUBE,os.O_RDONLY)
 socketlist = [serversocket,Writer]
 first = True
 
-def clafin():
+def clafin(): # 
     os.remove(TUBE)
     print("Last connection closed. Bye!")
 atexit.register(clafin)
@@ -40,7 +40,6 @@ def send_to_user(message,recivier):
             name = carnet[s.getpeername()[1]][0]
             if name in recivier:
                 s.sendall(message)
-
 
 def broadcast_message(message):
     # Parcours de toutes les sockets dans socketlist
@@ -66,28 +65,27 @@ lancé = False
 while first or nb_open > 0:
     (activesockets, _, _) = select.select(socketlist, [], [])
     for s in activesockets: 
-        if s == serversocket:
-            if not lancé :
+        if s == serversocket: # si c'est une nouvelle connexion
+            if not lancé : 
                 (clientsocket, (addr, port)) = serversocket.accept()
                 socketlist.append(clientsocket)
                 UserName = clientsocket.recv(MAXBYTES).decode()
                 # _ = clientsocket.recv(MAXBYTES).decode() #ignore la deuxieme entrée
                 cookie = random.randint(100000,999999)
                 mots_courants = ["maison","chat","voiture","chien","ordinateur","table","téléphone","arbre","café","livre","fenêtre","porte","avion","banane","musique","soleil","pluie","sac","télévision","crayon"]
-                carnet[port] = (UserName,addr,etat,str(cookie),clientsocket,random.choice(mots_courants))
-                for page in carnet:
+                carnet[port] = (UserName,addr,etat,str(cookie),clientsocket,random.choice(mots_courants)) # je manque de temps pour faire un truc plus clean
+                for page in carnet: # j'envoie tout le carnet au nouveau client
                     a = f"#CARNET#{carnet[page][0]}#{carnet[page][2]} "
                     clientsocket.sendall(a.encode())
                     time.sleep(0.1)
                 cookie_volatil = f"#CARNET#{UserName}#{etat}"
                 print(f"Incoming connection from {UserName} {addr} on port {port}... id {cookie}")
                 cokie_encodé=cookie_volatil.encode()
-                broadcast_message(cokie_encodé)
+                broadcast_message(cokie_encodé) #puis j'envoie la page a tout les clients
                 first = False   
                 nb_open += 1
             else:
                 (clientsocket, (addr, port)) = serversocket.accept()
-
                 UserName = clientsocket.recv(MAXBYTES).decode()
                 CookieRecu = clientsocket.recv(MAXBYTES).decode() #ignore la deuxieme entrée
                 for (index,page) in carnet.items() :
@@ -106,25 +104,24 @@ while first or nb_open > 0:
                         break
                 
                 print(f"{carnet}")
-        elif s == Writer :
+        elif s == Writer : # si c'ets le 
             msg = os.read(Writer, 4096)
-            if msg.startswith(b'!start') and not lancé: #On Cook severe ici
+            if msg.startswith(b'!start') and not lancé: #On lance la partie si elle ne l'est pas déjà
                 lancé = True
                 ordre = []
                 for (index,page) in carnet.items() :
-                    UserName,_,_,cookie,clientsocket,mot = page #c caca
+                    UserName,_,_,cookie,clientsocket,mot = page
                     ordre.append(index)
                     lancement = f"!start {cookie}".encode()
-                    # os.write(1,lancement)
                     clientsocket.send(lancement)
                 broadcast_message("La partie est lancé vous allez recevoir vos cible\n".encode())
                 random.shuffle(ordre)
-                os.write(1,str(ordre).encode())
                 for i in range(len(ordre)):
                     nomcible,motcible,socketkiller = carnet[ordre[i-1]][0] , carnet[ordre[i-1]][5] , carnet[ordre[i]][4]
-                    message = f"Ta cible est {nomcible} son mot est {motcible}\n"
-                    socketkiller.sendall(message.encode())
-            elif msg.startswith(b"@"):
+                    message = f"Ta cible est {nomcible} son mot est {motcible}\n".encode()
+                    socketkiller.sendall(message)
+                    os.write(message)
+            elif msg.startswith(b"@"):# si c'est un message privé
                 recipient = msg.decode().split(" ")
                 destinataires = []
                 iscommande = False
@@ -137,8 +134,8 @@ while first or nb_open > 0:
                             iscommande = True
                 if not iscommande:
                     send_to_user(msg,destinataires)
-                    print(f"*Comande invalide*\n")
-            elif msg != '' and msg != "\n":
+
+            elif msg != '' and msg != "\n": # si le msg n'est pas vide
                 msg = msg
                 os.write(1,msg)
                 broadcast_message(msg)
@@ -152,25 +149,24 @@ while first or nb_open > 0:
                 broadcast_message(a)
                 s.close()
                 socketlist.remove(s)
-                
                 nb_open -= 1
             else:
-                qui = s.getpeername()[1]
-                source_info = f"[{carnet[qui][0]}] : {msg.decode()}"
+                qui = s.getpeername()[1] # qui parles
+                source_info = f"[{carnet[qui][0]}] : {msg.decode()}" #format du message envoyé
                 msg_mine = source_info.encode() 
                 os.write(1, msg_mine)
-                if lancé and (carnet[qui][5] in msg.decode()):
+                if lancé and (carnet[qui][5] in msg.decode()): # est ce que le joueur perd ?
                     broadcast_message(f"{carnet[qui][0]} est mort !\n".encode())
-                if msg.startswith(b"@Admin"):
+                if msg.startswith(b"@Admin"): #est ce un message pour l'admin ?
                     pass
-                elif msg.startswith(b"@"):
+                elif msg.startswith(b"@"): #est ce un message privé
                     msg_str = msg.decode()
                     recipient_username = msg_str.split(" ")
                     destinataires = [s]
-                    for e in recipient_username:
+                    for e in recipient_username: # je décortique tout les destinataires
                         if e[0] == '@':
                             destinataires.append(e[1:])
                     send_to_user(msg_mine, destinataires)
-                else:
+                else: #sinon j'envoie a tout le monde
                     broadcast_message(msg_mine)
 sys.exit(0)
